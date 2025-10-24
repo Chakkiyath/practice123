@@ -1,0 +1,22 @@
+echo "==========================================="
+echo "Welcome to Jenkins Freestyle Project on Linux!"
+echo "==========================================="
+echo
+
+echo "Current Date and Time:"
+date
+echo
+
+echo "Logged in as: $(whoami)"
+echo "Running from: $(pwd)"
+echo
+
+echo "System Information:"
+uname -a
+echo
+
+echo "Listing workspace files:"
+ls -la
+echo
+
+echo "Task completed successfully!"
