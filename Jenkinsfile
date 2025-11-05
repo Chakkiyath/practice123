@@ -1,68 +1,50 @@
 pipeline {
     agent any
-
+    options { timestamps() }
     stages {
-        stage('Welcome') {
+        stage('Checkout') {
             steps {
-                echo '==========================================='
-                echo 'Welcome to Jenkins Pipeline Project!'
-                echo '==========================================='
+                checkout scm
+                sh 'echo "✅ Code checkout complete."'
             }
         }
-
-        stage('Show System Info') {
+        stage('Build') {
             steps {
-                script {
-                    // Check OS type and run appropriate commands
-                    if (isUnix()) {
-                        sh '''
-                            echo "Current Date and Time:"
-                            date
-                            echo
-                            echo "Logged in as: $(whoami)"
-                            echo "Running from: $(pwd)"
-                            echo
-                            echo "System Information:"
-                            uname -a
-                            echo
-                            echo "Listing workspace files:"
-                            ls -la
-                        '''
-                    } else {
-                        bat '''
-                            echo Current Date and Time:
-                            date /T
-                            time /T
-                            echo.
-                            echo Logged in as: %USERNAME%
-                            echo Running from: %CD%
-                            echo.
-                            echo System Information:
-                            systeminfo | findstr /B /C:"OS Name" /C:"OS Version"
-                            echo.
-                            echo Listing workspace files:
-                            dir
-                        '''
-                    }
-                }
+                sh '''
+                    echo "🔨 Building the project..."
+                    mkdir -p build
+                    echo "Hello from Jenkins" > build/hello.txt
+                '''
             }
         }
-
-        stage('Jenkins Environment Info') {
+        stage('Archive') {
             steps {
-                echo "Jenkins Job Name: ${env.JOB_NAME}"
-                echo "Build Number: ${env.BUILD_NUMBER}"
-                echo "Workspace: ${env.WORKSPACE}"
-                echo "Node Name: ${env.NODE_NAME}"
-            }
-        }
+                // DEBUG FIX: The 'fingerprint: true' key-value pair was
+                // incorrectly split across two lines.
+                // I've combined them onto one line to fix the syntax error.
+                archiveArtifacts artifacts: 'build/hello.txt', fingerprint: true
 
-        stage('Complete') {
-            steps {
-                echo '==========================================='
-                echo 'Task completed successfully!'
-                echo '==========================================='
+                sh 'echo "📦 hello.txt archived."'
             }
         }
     }
+    post {
+        success { echo '✅ Pipeline completed successfully!' }
+        
+        // DEBUG FIX: The 'junit' step was failing because 'testResults: '''
+        // was incorrectly matching all files (including the Jenkinsfile)
+        // as test reports.
+        // Since this pipeline doesn't generate XML test reports,
+        // the step has been removed to fix the error.
+        always {
+            // The problematic line was:
+            // junit allowEmptyResults: true, testResults: ''
+            
+            // Replaced with a simple echo. If you add tests later,
+            // you can add back the junit step with a specific file pattern,
+            // e.g., testResults: 'build/reports/*.xml'
+            echo "Pipeline post-processing finished."
+        }
+    }
 }
+
